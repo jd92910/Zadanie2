@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Aktualna pogoda</title>
+  <!-- Bootstrap dla stylizacji -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-5 bg-light">
+  <div class="container">
+    <h1 class="mb-4">Pogoda w Twoim mieście</h1>
+
+    <!-- Formularz: miasto wpisywane ręcznie, kraj z listy -->
+    <form id="pogodaForm" class="row g-3">
+      <div class="col-md-6">
+        <input class="form-control" type="text" id="miasto" placeholder="Wpisz miasto" required>
+      </div>
+      <div class="col-md-4">
+        <select class="form-select" id="kraj">
+          <option value="PL">Polska</option>
+          <option value="DE">Niemcy</option>
+          <option value="US">USA</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-primary w-100" type="submit">Sprawdź</button>
+      </div>
+    </form>
+
+    <!-- Miejsce na wynik -->
+    <div id="wynik" class="mt-4"></div>
+  </div>
+
+  <script>
+    // Obsługa formularza
+    document.getElementById('pogodaForm').addEventListener('submit', async (e) => {
+      e.preventDefault(); // Zatrzymaj domyślne działanie formularza
+
+      // Pobierz dane z formularza
+      const miasto = document.getElementById('miasto').value;
+      const kraj = document.getElementById('kraj').value;
+
+      // Wyślij zapytanie POST do serwera z danymi
+      const response = await fetch('/pogoda', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ miasto, kraj })  // JSON zamiast form-urlencoded
+      });
+
+      const wynikDiv = document.getElementById('wynik');
+      const data = await response.json();
+
+      // Jeśli błąd — pokaż alert
+      if (data.blad) {
+        wynikDiv.innerHTML = `<div class="alert alert-danger">${data.blad}</div>`;
+      } else {
+        // Jeśli sukces — wyświetl dane pogodowe w ładnej karcie
+        wynikDiv.innerHTML = `
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h4>${data.name}, ${data.sys.country}</h4>
+              <p><strong>${data.weather[0].description}</strong></p>
+              <ul>
+                <li>🌡️ Temp: ${data.main.temp}°C</li>
+                <li>💧 Wilgotność: ${data.main.humidity}%</li>
+                <li>🌬️ Wiatr: ${data.wind.speed} m/s</li>
+              </ul>
+            </div>
+          </div>`;
+      }
+    });
+  </script>
+</body>
+</html>
